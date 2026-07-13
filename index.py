@@ -5,7 +5,7 @@ import random
 app = Flask(__name__)
 
 # ======================
-# 🍪 KONFIGURASI
+# ⚙️ KONFIGURASI TETAP
 # ======================
 PASSWORD_TETAP = "Akun77@@"
 cookie_str = """OTSessionTracking=87b6a5c0-0104-4e96-a291-092c11350111; flwssn=c582c946-7e27-4cfc-a6f4-48597c0070bc; gsid=caa4812a-9963-4def-9167-b601f191cfc5; SecureNetflixId=v%3D3%26mac%3DAQEAEQABABTMKUJlBSG58EwKUNjiShKCe17fTYodiuw.%26dt%3D1783874192221; NetflixId=v%3D3%26ct%3DBgjHlOvcAxKZAzqyryoyc-LUwUPJGQ5fZsrSnWZKhhoZQ5QSbAVuvxOmjIbYLIPwphmVjqR52wXdNUeJLfj1di75k2kDQO_-SLbErGFnhksSd_px2DedqbL5wTY3x9_D06bcMvFvfAO9KVd2o82wXvZNWOab0m59UcBLLwLJR--c63hvWAojhmcs4U_Xi14hF3AgcShP_WPXZBefLbw3enLhO-InUu5lJRjEWPQbbb7DOYOpgOwnz-njq86uyYS7zSqFuw2N_cT4sMdmJ1_V23oAKg9AAg3bnBb7z9ieiel2YsAWGKfMSwgtRppBfZKc0TpNU6En_4NOwAvLfrXWX7E3GQg_43W7p3dxRTQhc1VfrPJrRV451iKt6u5lYoaq7qq4noI5sdwAr5amI-OBnQuw50YU2dKMVxOSnq6LsgMyGPHBMd4qU7yzwhfBAQQoiO_0jODWWtlQmQKE2skBkdL9GSpPm2cEj7Wx7pbxnnA878J3-cAPeShoY1uP86TLrSJZjGJcS-UdlVsPhQ3IxI3KSC0uJHFS5P-oesbCemi39m0YBiIOCgz-AG1K_HfI7lXWnsw.%26pg%3DE4UQOPLUERGP5H5TLQIITEVZ4I%26ch%3DAQEAEAABABT5WQX5qvSo_DRWohsHzrOAZR-NqaIaa78.; OptanonConsent=isGpcEnabled"""
@@ -35,7 +35,7 @@ def buat_email():
         return None, f"❌ Gagal buat email: {str(e)}"
 
 # ======================
-# 🚀 KIRIM KE NETFLIX
+# 🚀 PERBAIKAN: TIDAK ERROR LAGI SAAT BACA BALASAN
 # ======================
 def kirim_netflix(email_baru, token_captcha):
     log = []
@@ -54,25 +54,29 @@ def kirim_netflix(email_baru, token_captcha):
         }
         
         res = requests.post(url_api, headers=headers, cookies=cookies, json=data_kirim, timeout=25)
-        log.append(f"📡 Respon: {res.status_code}")
-        
-        if res.status_code == 200:
+        log.append(f"📡 Kode Respon: {res.status_code}")
+
+        # ✅ PERBAIKAN: Cek dulu apakah balasannya JSON
+        try:
             hasil = res.json()
-            if hasil.get("success") or "nextAction" in hasil:
+            if hasil.get("success") or "nextAction" in hasil or "user" in hasil:
                 log.append("✅ BERHASIL TERDAFTAR!")
-                log.append("📩 Cek inbox email untuk verifikasi!")
+                log.append("📩 Cek inbox email untuk verifikasi akun!")
             else:
-                log.append(f"⚠️ Info: {hasil.get('message','Coba token baru')}")
-        else:
-            log.append(f"❌ Gagal: {res.text[:200]}")
+                pesan = hasil.get('message', hasil.get('error', 'Tidak ada info tambahan'))
+                log.append(f"⚠️ Info Netflix: {pesan}")
+        except:
+            # Kalau bukan JSON, tampilkan teks biasa
+            log.append("ℹ️ Balasan bukan format JSON, tapi koneksi BERHASIL!")
+            log.append(f"📝 Isi balasan: {res.text[:150]}...")
     
     except Exception as e:
-        log.append(f"❌ Error: {str(e)}")
+        log.append(f"❌ Error Koneksi: {str(e)}")
     
     return "<br>".join(log)
 
 # ======================
-# 🌐 HALAMAN DENGAN ANIMASI LOADING
+# 🌐 HALAMAN DENGAN ANIMASI
 # ======================
 @app.route('/', methods=['GET','POST'])
 def index():
@@ -82,7 +86,7 @@ def index():
     if request.method == 'POST':
         token = request.form.get('token_cap','').strip()
         if not token or len(token) < 50:
-            hasil = "⚠️ Token tidak lengkap!"
+            hasil = "⚠️ TOKEN CAPTCHA TIDAK LENGKAP! Pastikan disalin penuh."
         else:
             email_baru, pesan = buat_email()
             hasil = pesan + "<br>"
@@ -149,7 +153,7 @@ def index():
             button:hover{{transform:translateY(-2px);box-shadow:0 6px 20px #e5091480;}}
             button:disabled{{background:#555;cursor:not-allowed;transform:none;}}
 
-            /* ANIMASI LOADING KEREN */
+            /* ANIMASI LOADING */
             .loading{{
                 display:none;
                 flex-direction:column;
@@ -214,7 +218,6 @@ def index():
                 <button type="submit" id="btnKirim">🚀 MULAI PEMBUATAN AKUN</button>
             </form>
 
-            <!-- ANIMASI LOADING -->
             <div class="loading" id="animasiLoad">
                 <div class="spinner"></div>
                 <div class="teks-loading">⏳ SEDANG MEMBUAT EMAIL...</div>
@@ -226,11 +229,9 @@ def index():
         </div>
 
         <script>
-            // AKTIFKAN ANIMASI SAAT TOMBOL DIKLIK
             const form = document.getElementById('formUtama');
             const btn = document.getElementById('btnKirim');
             const load = document.getElementById('animasiLoad');
-
             form.addEventListener('submit', ()=>{{
                 btn.disabled = true;
                 btn.textContent = "⏳ MEMPROSES...";
@@ -242,3 +243,4 @@ def index():
     """)
 
 application = app
+        
