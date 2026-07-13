@@ -7,14 +7,14 @@ import time
 app = Flask(__name__)
 
 # ======================
-# 🍪 DATA KONFIGURASI LU
+# 🍪 COOKIE BARU SUPPORT TRIAL 30 HARI
 # ======================
-cookie_str = """flwssn=c582c946-7e27-4cfc-a6f4-48597c0070bc;gsid=34197de4-f1e9-4d42-b254-2865906eaadc;SecureNetflixId=v%3D3%26mac%3DAQEAEQABABScAQhKHK_HuVx13xuvLPOZGaPEwMI39hU.%26dt%3D1783875815871;NetflixId=v%3D3%26ct%3DBgjHlOvcAxK8AQg10SjdRnmbKEnp_JwzTpYamPvvywqzDSxlVbfr7kEfypWwm-YnIOc5UKoMzSoX21d7H6Uv3gi99VO6YFb5yS8MELHcvWaOJ9b7Rgcz65RtCNlX3bVgtCGLl3aDae3Ol7Koi4xyli2Rt9OV9vgYoJ9-JHWXVvLLd9eiKX1t0-9zfo3Mvw_eP1EHlgO0bpMLyPKSDfKIo4eYN03OQPVjOA9OagAVRfudG6cbKKQPmCtnwhtdYrWIoajCsy0vGAYiDgoMqmTj8AHHlLk_smSQ;nfvdid=BQFmAAEBEAOpPCJrtFJLPu3EKNJPsT5glpLRsf9RvpeRRLKb5eyg0OguTiK2I3yonVDQtPZn77s2lTpJx4EFtQlDo52Gt7W0QdkqB0FINaROcR1E4W2ygtkUrA0hpb5CnRJWojAB_dbD8OPclxkUoHpETUwrBKDL;"""
+cookie_str = """OTSessionTracking=87b6a5c0-0104-4e96-a291-092c11350111; flwssn=c582c946-7e27-4cfc-a6f4-48597c0070bc; gsid=caa4812a-9963-4def-9167-b601f191cfc5; netflix-sans-normal-3-loaded=true; netflix-sans-bold-3-loaded=true; nfvdid=BQFmAAEBEFECklCXwPof2v9oq0m-kSRgvhoBMFMGUDA7VDqWzhfh6d_0vpcH50lGalU_bxnBEk7nNy4QPSA0ConA19vDmIPnohyqr0WFLyg2fo0JhJEX0UUhy4k43S3wDJHceiqeKmXpBSFCFSBK5HyuCGBHr7-t; SecureNetflixId=v%3D3%26mac%3DAQEAEQABABTMKUJlBSG58EwKUNjiShKCe17fTYodiuw.%26dt%3D1783874192221; NetflixId=v%3D3%26ct%3DBgjHlOvcAxKZAzqyryoyc-LUwUPJGQ5fZsrSnWZKhhoZQ5QSbAVuvxOmjIbYLIPwphmVjqR52wXdNUeJLfj1di75k2kDQO_-SLbErGFnhksSd_px2DedqbL5wTY3x9_D06bcMvFvfAO9KVd2o82wXvZNWOab0m59UcBLLwLJR--c63hvWAojhmcs4U_Xi14hF3AgcShP_WPXZBefLbw3enLhO-InUu5lJRjEWPQbbb7DOYOpgOwnz-njq86uyYS7zSqFuw2N_cT4sMdmJ1_V23oAKg9AAg3bnBb7z9ieiel2YsAWGKfMSwgtRppBfZKc0TpNU6En_4NOwAvLfrXWX7E3GQg_43W7p3dxRTQhc1VfrPJrRV451iKt6u5lYoaq7qq4noI5sdwAr5amI-OBnQuw50YU2dKMVxOSnq6LsgMyGPHBMd4qU7yzwhfBAQQoiO_0jODWWtlQmQKE2skBkdL9GSpPm2cEj7Wx7pbxnnA878J3-cAPeShoY1uP86TLrSJZjGJcS-UdlVsPhQ3IxI3KSC0uJHFS5P-oesbCemi39m0YBiIOCgz-AG1K_HfI7lXWnsw.%26pg%3DE4UQOPLUERGP5H5TLQIITEVZ4I%26ch%3DAQEAEAABABT5WQX5qvSo_DRWohsHzrOAZR-NqaIaa78.; OptanonConsent=isGpcEnabled; netflix-mfa-nonce=BgjKu-vcAxKVAc0DUXYgDqIWVIzhYsnCKqapNSXdcVFK9cYXWP6nwuKKUEVHr8XYgaZqtljG2irj4VyLBbfEULpMUyUUccoCDGtb-HJUsjLXCqHU0YmP5kh7hBtXeNHmVOC_2lJoKiIwmsV_PK3EZLhj3NiTqa7InlZ4mgQ1-pyduR8jj2UDl3yEOqee7Z9P2B2-wl99zKnU-xyiv2n9GAYiDgoMssZccgelFQF52LGT; SecureNetflixId=v%3D3%26mac%3DAQEAEQABABQUf1AVs_qg5_qXuBMl5XBvTk8z3KiPLIU.%26dt%3D1783908403395; NetflixId=v%3D3%26ct%3DBgjHlOvcAxLEAa165jG28xojVluZFEqg5hdmfbmhvtFX3Ns-5X3myeqyycqLhWe5RCkaCPpem8Yoes_2CsJ8-rPhrWACl0Hc0oPQ4OdKMCRWKRo7BiQWoExmBNl0d7zB7e4oiEk6z7MHtMtYGKPZ0B2xvvdcMRe3U_Hkj0zxisOgKlhJUdawnEVjVDWHiN1J8ANN7NpLGmmamPBNQZJp23BrtWqfVIML3Zr4PM5Z1YDn5LthRdDcq1XSzlj9PY6iLWStftvPhnJeWVtC1kYYBiIOCgwvtoGR1vVu9TLWAdk.; OptanonConsent=isGpcEnabled=undefined&hosts=&datestamp=Mon+Jul+13+2026+09%3A42%3A03+GMT%2B0700+(Waktu+Indonesia+Barat)&version=202604.2.0"""
 
 API_KEY_CAPTCHA = "f1dd8bc4-24f5-40f8-b75d-8b719f071db4"
 JUMLAH_AKUN = 1
 
-# Proses cookie
+# Proses cookie otomatis hapus duplikat
 cookies = {}
 for c in cookie_str.split(';'):
     if '=' in c:
@@ -33,7 +33,7 @@ headers_mailtm = {"Content-Type": "application/json", "Accept": "application/jso
 BASE_MAILTM = "https://api.mail.tm"
 
 # ======================
-# 🤖 AMBIL TOKEN CAPTCHA (SUDAH DIPERBAIKI PUBLIC KEY)
+# 🤖 AMBIL TOKEN CAPTCHA
 # ======================
 def ambil_token_captcha():
     log = ["🤖 MEMINTA TOKEN CAPTCHA..."]
@@ -51,7 +51,7 @@ def ambil_token_captcha():
         )
         data_buat = res_buat.json()
         if data_buat.get("errorId") != 0:
-            log.append(f"❌ GAGAL: {data_buat.get('errorDescription', 'Salah API Key / Saldo habis')}")
+            log.append(f"❌ GAGAL: {data_buat.get('errorDescription', 'Cek saldo/API Key')}")
             return None
         
         task_id = data_buat["taskId"]
@@ -68,10 +68,10 @@ def ambil_token_captcha():
                 log.append("✅ TOKEN BERHASIL DAPAT!")
                 return data_cek["solution"]["gRecaptchaResponse"]
             elif data_cek.get("status") == "failed":
-                log.append(f"❌ TASK GAGAL: {data_cek.get('errorDescription')}")
+                log.append(f"❌ GAGAL: {data_cek.get('errorDescription')}")
                 return None
         
-        log.append("⏰ LAMA SEKALI, COBA LAGI NANTI")
+        log.append("⏰ Waktu tunggu habis")
         return None
     
     except Exception as e:
@@ -79,35 +79,35 @@ def ambil_token_captcha():
         return None
 
 # ======================
-# 🚀 PROSES UTAMA
+# 🚀 PROSES PENDAFTARAN TRIAL
 # ======================
 def proses_semua():
-    log = ["🎁 OTOMATIS PENDAFTARAN NETFLIX", "="*55]
+    log = ["🎁 DAFTAR TRIAL 30 HARI NETFLIX", "="*55]
     
     token = ambil_token_captcha()
     if not token:
-        log.append("\n❌ TIDAK BISA LANJUT KARENA TOKEN GAGAL DAPAT!")
+        log.append("\n❌ TIDAK BISA LANJUT: TOKEN CAPTCHA GAGAL DAPAT!")
         return "<br>".join(log)
     
     log.append("")
     
     for no in range(1, JUMLAH_AKUN+1):
         log.append(f"════════════ AKUN KE-{no} ════════════")
-        log.append("📧 MEMBUAT EMAIL DI mail.tm...")
+        log.append("📧 MEMBUAT EMAIL TEMPORAL...")
         
-        # Buat email (aman dari error hydra)
+        # Buat email mail.tm
         try:
             res_domain = requests.get(f"{BASE_MAILTM}/domains?page=1", timeout=10)
             dom_data = res_domain.json()
             daftar_dom = dom_data.get("hydra:member", [])
             if not daftar_dom:
-                log.append("❌ TIDAK BISA AMBIL DOMAIN!")
+                log.append("❌ DOMAIN TIDAK TERSEDIA!")
                 continue
             domain = daftar_dom[0]["domain"]
             
             nama = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
             email_baru = f"{nama}@{domain}"
-            sandi = "UjiCoba99!"
+            sandi = "TrialGratis99!"
             
             res_buat = requests.post(
                 f"{BASE_MAILTM}/accounts",
@@ -125,8 +125,8 @@ def proses_semua():
             log.append(f"❌ ERROR MAIL.TM: {str(e)}")
             continue
         
-        # Kirim ke Netflix (sesuai API terbaru)
-        log.append("🌐 MENGIRIM KE SERVER NETFLIX...")
+        # Kirim ke server Netflix (alur trial)
+        log.append("🌐 MENGIRIM KE HALAMAN TRIAL...")
         try:
             payload = {
                 "operationName": "CLCSScreenUpdate",
@@ -140,7 +140,7 @@ def proses_semua():
                         {"name": "email", "value": {"stringValue": email_baru}},
                         {"name": "pipcConsent", "value": {"booleanValue": False}},
                         {"name": "emailConsent", "value": {"booleanValue": False}},
-                        {"name": "recaptchaResponseTime", "value": {"intValue": 1150}},
+                        {"name": "recaptchaResponseTime", "value": {"intValue": 1180}},
                         {"name": "recaptchaResponseToken", "value": {"stringValue": token}}
                     ]
                 },
@@ -158,17 +158,17 @@ def proses_semua():
             )
             data = res_netflix.json()
             if "errors" not in data:
-                log.append("✅ BERHASIL TERKIRIM KE NETFLIX!")
-                log.append("📩 CEK EMAIL DI mail.tm DALAM 1-2 MENIT!")
+                log.append("✅ BERHASIL! MASUK KE ALUR TRIAL 30 HARI!")
+                log.append("📩 CEK EMAIL DI mail.tm UNTUK VERIFIKASI!")
             else:
-                log.append(f"⚠️ RESPON NETFLIX: {data['errors'][0]['message']}")
+                log.append(f"⚠️ RESPON: {data['errors'][0]['message']}")
         
         except Exception as e:
             log.append(f"❌ ERROR KIRIM: {str(e)}")
     
     log.append("")
     log.append("="*55)
-    log.append("✅ SELESAI!")
+    log.append("✅ SELESAI! GUNAKAN EMAIL TERSEBUT UNTUK LANJUTKAN TRIAL!")
     return "<br>".join(log)
 
 # ======================
@@ -182,7 +182,7 @@ def index():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>DAFTAR NETFLIX OTOMATIS</title>
+        <title>TRIAL 30 HARI OTOMATIS</title>
         <style>
             * {{box-sizing:border-box;margin:0;padding:0;}}
             body {{background:#111;color:#0f0;font-family:monospace;padding:15px;max-width:550px;margin:auto;}}
@@ -191,7 +191,7 @@ def index():
         </style>
     </head>
     <body>
-        <h2>🎁 OTOMATIS PENDAFTARAN</h2>
+        <h2>🎁 DAFTAR TRIAL 30 HARI</h2>
         <div class="log">{hasil}</div>
     </body>
     </html>
@@ -200,4 +200,3 @@ def index():
 
 if __name__ != "__main__":
     application = app
-        
