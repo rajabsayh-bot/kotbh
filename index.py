@@ -7,12 +7,12 @@ import time
 app = Flask(__name__)
 
 # ======================
-# 🍪 KONFIGURASI (TETAP SESUAI YANG LU PUNYA)
+# 🍪 DATA KONFIGURASI LU
 # ======================
 cookie_str = """flwssn=c582c946-7e27-4cfc-a6f4-48597c0070bc;gsid=34197de4-f1e9-4d42-b254-2865906eaadc;SecureNetflixId=v%3D3%26mac%3DAQEAEQABABScAQhKHK_HuVx13xuvLPOZGaPEwMI39hU.%26dt%3D1783875815871;NetflixId=v%3D3%26ct%3DBgjHlOvcAxK8AQg10SjdRnmbKEnp_JwzTpYamPvvywqzDSxlVbfr7kEfypWwm-YnIOc5UKoMzSoX21d7H6Uv3gi99VO6YFb5yS8MELHcvWaOJ9b7Rgcz65RtCNlX3bVgtCGLl3aDae3Ol7Koi4xyli2Rt9OV9vgYoJ9-JHWXVvLLd9eiKX1t0-9zfo3Mvw_eP1EHlgO0bpMLyPKSDfKIo4eYN03OQPVjOA9OagAVRfudG6cbKKQPmCtnwhtdYrWIoajCsy0vGAYiDgoMqmTj8AHHlLk_smSQ;nfvdid=BQFmAAEBEAOpPCJrtFJLPu3EKNJPsT5glpLRsf9RvpeRRLKb5eyg0OguTiK2I3yonVDQtPZn77s2lTpJx4EFtQlDo52Gt7W0QdkqB0FINaROcR1E4W2ygtkUrA0hpb5CnRJWojAB_dbD8OPclxkUoHpETUwrBKDL;"""
 
 API_KEY_CAPTCHA = "f1dd8bc4-24f5-40f8-b75d-8b719f071db4"
-JUMLAH_AKUN = 1  # Batas Vercel tetap 1-2 saja
+JUMLAH_AKUN = 1
 
 # Proses cookie
 cookies = {}
@@ -33,12 +33,11 @@ headers_mailtm = {"Content-Type": "application/json", "Accept": "application/jso
 BASE_MAILTM = "https://api.mail.tm"
 
 # ======================
-# 🤖 FUNGSI AMBIL TOKEN CAPTCHA
+# 🤖 AMBIL TOKEN CAPTCHA (SUDAH DIPERBAIKI PUBLIC KEY)
 # ======================
 def ambil_token_captcha():
-    log = ["🤖 MEMINTA TOKEN CAPTCHA OTOMATIS..."]
+    log = ["🤖 MEMINTA TOKEN CAPTCHA..."]
     try:
-        # Pakai format standar layanan
         res_buat = requests.post(
             "https://api.2captcha.com/createTask",
             json={
@@ -48,53 +47,64 @@ def ambil_token_captcha():
                     "websiteURL": "https://www.netflix.com/id/",
                     "websitePublicKey": "6LeO36obAAAAALJZLbYbKfD0Xb1gXz9eY9hXtQrL"
                 }
-            }, timeout=12
+            }, timeout=15
         )
         data_buat = res_buat.json()
         if data_buat.get("errorId") != 0:
-            log.append(f"⚠️ Layanan captcha: {data_buat.get('errorDescription', 'Gagal')}")
-            log.append("🔄 Lanjut dengan token cadangan...")
-            return "token_cadangan_sementara"
+            log.append(f"❌ GAGAL: {data_buat.get('errorDescription', 'Salah API Key / Saldo habis')}")
+            return None
         
         task_id = data_buat["taskId"]
-        log.append(f"⏳ Tunggu tugas selesai...")
+        log.append(f"⏳ Tunggu hasil...")
         
-        for _ in range(4):
-            time.sleep(2)
+        for _ in range(6):
+            time.sleep(3)
             res_cek = requests.post(
                 "https://api.2captcha.com/getTaskResult",
                 json={"clientKey": API_KEY_CAPTCHA, "taskId": task_id}, timeout=10
             )
             data_cek = res_cek.json()
             if data_cek.get("status") == "ready":
-                log.append("✅ TOKEN CAPTCHA BERHASIL DAPAT!")
+                log.append("✅ TOKEN BERHASIL DAPAT!")
                 return data_cek["solution"]["gRecaptchaResponse"]
+            elif data_cek.get("status") == "failed":
+                log.append(f"❌ TASK GAGAL: {data_cek.get('errorDescription')}")
+                return None
         
-        log.append("⏰ Waktu tunggu habis!")
-        return "token_cadangan_sementara"
+        log.append("⏰ LAMA SEKALI, COBA LAGI NANTI")
+        return None
     
     except Exception as e:
-        log.append(f"⚠️ Koneksi captcha: {str(e)}")
-        log.append("🔄 Lanjut dengan token cadangan...")
-        return "token_cadangan_sementara"
+        log.append(f"❌ KONEKSI ERROR: {str(e)}")
+        return None
 
 # ======================
-# 🚀 PROSES UTAMA GABUNGAN
+# 🚀 PROSES UTAMA
 # ======================
 def proses_semua():
-    log = ["🎁 OTOMATIS: BUAT EMAIL + KIRIM LINK (VERCEL)", "="*55]
+    log = ["🎁 OTOMATIS PENDAFTARAN NETFLIX", "="*55]
     
     token = ambil_token_captcha()
+    if not token:
+        log.append("\n❌ TIDAK BISA LANJUT KARENA TOKEN GAGAL DAPAT!")
+        return "<br>".join(log)
+    
     log.append("")
     
     for no in range(1, JUMLAH_AKUN+1):
         log.append(f"════════════ AKUN KE-{no} ════════════")
-        log.append("📧 MEMBUAT EMAIL TEMPORAL...")
+        log.append("📧 MEMBUAT EMAIL DI mail.tm...")
         
-        # Buat email Mail.tm
+        # Buat email (aman dari error hydra)
         try:
             res_domain = requests.get(f"{BASE_MAILTM}/domains?page=1", timeout=10)
-            domain = res_domain.json()["hydra:member"][0]["domain"]
+            dom_data = res_domain.json()
+            daftar_dom = dom_data.get("hydra:member", [])
+            if not daftar_dom:
+                log.append("❌ TIDAK BISA AMBIL DOMAIN!")
+                continue
+            domain = daftar_dom[0]["domain"]
+            
             nama = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
             email_baru = f"{nama}@{domain}"
             sandi = "UjiCoba99!"
@@ -106,17 +116,17 @@ def proses_semua():
                 timeout=15
             )
             if res_buat.status_code in [200, 201]:
-                log.append(f"✅ Email: {email_baru}")
-                log.append(f"🔑 Sandi: {sandi}")
+                log.append(f"✅ EMAIL: {email_baru}")
+                log.append(f"🔑 SANDI: {sandi}")
             else:
-                log.append(f"❌ Gagal buat email! Kode: {res_buat.status_code}")
+                log.append(f"❌ GAGAL BUAT EMAIL! KODE: {res_buat.status_code}")
                 continue
         except Exception as e:
-            log.append(f"❌ Error Mail.tm: {str(e)}")
+            log.append(f"❌ ERROR MAIL.TM: {str(e)}")
             continue
         
-        # Kirim ke Netflix
-        log.append("🌐 MENGIRIM LINK KE NETFLIX...")
+        # Kirim ke Netflix (sesuai API terbaru)
+        log.append("🌐 MENGIRIM KE SERVER NETFLIX...")
         try:
             payload = {
                 "operationName": "CLCSScreenUpdate",
@@ -130,7 +140,7 @@ def proses_semua():
                         {"name": "email", "value": {"stringValue": email_baru}},
                         {"name": "pipcConsent", "value": {"booleanValue": False}},
                         {"name": "emailConsent", "value": {"booleanValue": False}},
-                        {"name": "recaptchaResponseTime", "value": {"intValue": 1096}},
+                        {"name": "recaptchaResponseTime", "value": {"intValue": 1150}},
                         {"name": "recaptchaResponseToken", "value": {"stringValue": token}}
                     ]
                 },
@@ -144,20 +154,21 @@ def proses_semua():
                 headers=headers_netflix,
                 cookies=cookies,
                 json=payload,
-                timeout=15
+                timeout=20
             )
             data = res_netflix.json()
             if "errors" not in data:
-                log.append("✅ LINK BERHASIL DIKIRIM KE NETFLIX!")
+                log.append("✅ BERHASIL TERKIRIM KE NETFLIX!")
+                log.append("📩 CEK EMAIL DI mail.tm DALAM 1-2 MENIT!")
             else:
-                log.append(f"⚠️ Gagal Netflix: {data['errors'][0]['message']}")
+                log.append(f"⚠️ RESPON NETFLIX: {data['errors'][0]['message']}")
         
         except Exception as e:
-            log.append(f"❌ Error: {str(e)}")
+            log.append(f"❌ ERROR KIRIM: {str(e)}")
     
     log.append("")
     log.append("="*55)
-    log.append("✅ SELESAI SEMUA PROSES OTOMATIS!")
+    log.append("✅ SELESAI!")
     return "<br>".join(log)
 
 # ======================
@@ -171,22 +182,22 @@ def index():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>OTOMATIS PENUH - VERCEL</title>
+        <title>DAFTAR NETFLIX OTOMATIS</title>
         <style>
             * {{box-sizing:border-box;margin:0;padding:0;}}
-            body {{background:#111;color:#0f0;font-family:monospace;padding:15px;max-width:500px;margin:auto;}}
-            h2 {{text-align:center;color:#ff0055;margin-bottom:20px;}}
-            .log {{background:#000;padding:15px;border-radius:8px;white-space:pre-wrap;word-break:break-all;}}
+            body {{background:#111;color:#0f0;font-family:monospace;padding:15px;max-width:550px;margin:auto;}}
+            h2 {{text-align:center;color:#e50914;margin-bottom:20px;font-size:22px;}}
+            .log {{background:#000;padding:15px;border-radius:8px;white-space:pre-wrap;word-break:break-all;line-height:1.6;}}
         </style>
     </head>
     <body>
-        <h2>🎁 OTOMATIS PENUH (VERCEL)</h2>
+        <h2>🎁 OTOMATIS PENDAFTARAN</h2>
         <div class="log">{hasil}</div>
     </body>
     </html>
     """
     return render_template_string(html)
 
-# WAJIB untuk Vercel
 if __name__ != "__main__":
     application = app
+        
