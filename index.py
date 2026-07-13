@@ -4,7 +4,7 @@ import requests, random, string, time, re
 app = Flask(__name__)
 
 # ======================
-# 🍪 DATA NETFLIX
+# 🍪 COOKIE & HEADER
 # ======================
 cookie_str = """OTSessionTracking=87b6a5c0-0104-4e96-a291-092c11350111; flwssn=c582c946-7e27-4cfc-a6f4-48597c0070bc; gsid=caa4812a-9963-4def-9167-b601f191cfc5; netflix-sans-normal-3-loaded=true; netflix-sans-bold-3-loaded=true; nfvdid=BQFmAAEBEFECklCXwPof2v9oq0m-kSRgvhoBMFMGUDA7VDqWzhfh6d_0vpcH50lGalU_bxnBEk7nNy4QPSA0ConA19vDmIPnohyqr0WFLyg2fo0JhJEX0UUhy4k43S3wDJHceiqeKmXpBSFCFSBK5HyuCGBHr7-t; SecureNetflixId=v%3D3%26mac%3DAQEAEQABABTMKUJlBSG58EwKUNjiShKCe17fTYodiuw.%26dt%3D1783874192221; NetflixId=v%3D3%26ct%3DBgjHlOvcAxKZAzqyryoyc-LUwUPJGQ5fZsrSnWZKhhoZQ5QSbAVuvxOmjIbYLIPwphmVjqR52wXdNUeJLfj1di75k2kDQO_-SLbErGFnhksSd_px2DedqbL5wTY3x9_D06bcMvFvfAO9KVd2o82wXvZNWOab0m59UcBLLwLJR--c63hvWAojhmcs4U_Xi14hF3AgcShP_WPXZBefLbw3enLhO-InUu5lJRjEWPQbbb7DOYOpgOwnz-njq86uyYS7zSqFuw2N_cT4sMdmJ1_V23oAKg9AAg3bnBb7z9ieiel2YsAWGKfMSwgtRppBfZKc0TpNU6En_4NOwAvLfrXWX7E3GQg_43W7p3dxRTQhc1VfrPJrRV451iKt6u5lYoaq7qq4noI5sdwAr5amI-OBnQuw50YU2dKMVxOSnq6LsgMyGPHBMd4qU7yzwhfBAQQoiO_0jODWWtlQmQKE2skBkdL9GSpPm2cEj7Wx7pbxnnA878J3-cAPeShoY1uP86TLrSJZjGJcS-UdlVsPhQ3IxI3KSC0uJHFS5P-oesbCemi39m0YBiIOCgz-AG1K_HfI7lXWnsw.%26pg%3DE4UQOPLUERGP5H5TLQIITEVZ4I%26ch%3DAQEAEAABABT5WQX5qvSo_DRWohsHzrOAZR-NqaIaa78.; OptanonConsent=isGpcEnabled; netflix-sans-normal-3-loaded=true; netflix-sans-bold-3-loaded=true; OTSessionTracking=87b6a5c0-0104-4e96-a291-092c11350111; netflix-mfa-nonce=BgjKu-vcAxKVAc0DUXYgDqIWVIzhYsnCKqapNSXdcVFK9cYXWP6nwuKKUEVHr8XYgaZqtljG2irj4VyLBbfEULpMUyUUccoCDGtb-HJUsjLXCqHU0YmP5kh7hBtXeNHmVOC_2lJoKiIwmsV_PK3EZLhj3NiTqa7InlZ4mgQ1-pyduR8jj2UDl3yEOqee7Z9P2B2-wl99zKnU-xyiv2n9GAYiDgoMssZccgelFQF52LGT; flwssn=c582c946-7e27-4cfc-a6f4-48597c0070bc; nfvdid=BQFmAAEBEAOpPCJrtFJLPu3EKNJPsT5glpLRsf9RvpeRRLKb5eyg0OguTiK2I3yonVDQtPZn77s2lTpJx4EFtQlDo52Gt7W0QdkqB0FINaROcR1E4W2ygtkUrA0hpb5CnRJWojAB_dbD8OPclxkUoHpETUwrBKDL; SecureNetflixId=v%3D3%26mac%3DAQEAEQABABQUf1AVs_qg5_qXuBMl5XBvTk8z3KiPLIU.%26dt%3D1783908403395; NetflixId=v%3D3%26ct%3DBgjHlOvcAxLEAa165jG28xojVluZFEqg5hdmfbmhvtFX3Ns-5X3myeqyycqLhWe5RCkaCPpem8Yoes_2CsJ8-rPhrWACl0Hc0oPQ4OdKMCRWKRo7BiQWoExmBNl0d7zB7e4oiEk6z7MHtMtYGKPZ0B2xvvdcMRe3U_Hkj0zxisOgKlhJUdawnEVjVDWHiN1J8ANN7NpLGmmamPBNQZJp23BrtWqfVIML3Zr4PM5Z1YDn5LthRdDcq1XSzlj9PY6iLWStftvPhnJeWVtC1kYYBiIOCgwvtoGR1vVu9TLWAdk.; OptanonConsent=isGpcEnabled=undefined&hosts=&datestamp=Mon+Jul+13+2026+09%3A42%3A03+GMT%2B0700+(Waktu+Indonesia+Barat)&version=202604.2.0"""
 
@@ -14,55 +14,88 @@ headers_mailtm = {"Content-Type":"application/json","Accept":"application/json"}
 BASE_MAILTM = "https://api.mail.tm"
 
 # ======================
-# 📧 BACA EMAIL OTOMATIS
+# 📧 BACA EMAIL (SUDAH DIPERBAIKI)
 # ======================
 def baca_email(email, sandi):
     log = ["📥 MENUNGGU PESAN VERIFIKASI..."]
     try:
-        login = requests.post(f"{BASE_MAILTM}/token", json={"address":email,"password":sandi}, timeout=15)
-        if login.status_code != 200:
-            log.append("❌ GAGAL MASUK KE EMAIL!")
+        # Login ke email
+        login_res = requests.post(f"{BASE_MAILTM}/token", json={"address":email,"password":sandi}, timeout=15)
+        if login_res.status_code != 200:
+            log.append(f"❌ GAGAL LOGIN: Kode {login_res.status_code}")
             return "<br>".join(log)
-        token_mail = login.json()["token"]
+        
+        token_data = login_res.json()
+        token_mail = token_data.get("token")
+        if not token_mail:
+            log.append("❌ TIDAK DAPAT TOKEN EMAIL!")
+            return "<br>".join(log)
+            
         h = {"Authorization":f"Bearer {token_mail}","Accept":"application/json"}
 
+        # Cek pesan berkali-kali
         for cek in range(10):
             time.sleep(3)
-            pesan = requests.get(f"{BASE_MAILTM}/messages?page=1", headers=h, timeout=10).json()
-            if pesan["hydra:totalItems"] > 0:
-                id_pesan = pesan["hydra:member"][0]["id"]
-                isi = requests.get(f"{BASE_MAILTM}/messages/{id_pesan}", headers=h, timeout=10).json()
+            pesan_res = requests.get(f"{BASE_MAILTM}/messages?page=1", headers=h, timeout=10)
+            pesan_data = pesan_res.json()
+            
+            # Baca data dengan aman
+            total = pesan_data.get("hydra:totalItems", 0)
+            daftar_pesan = pesan_data.get("hydra:member", [])
+            
+            if total > 0 and len(daftar_pesan) > 0:
+                pesan_pertama = daftar_pesan[0]
+                id_pesan = pesan_pertama.get("id")
+                if not id_pesan:
+                    continue
+                    
+                # Ambil isi pesan
+                isi_res = requests.get(f"{BASE_MAILTM}/messages/{id_pesan}", headers=h, timeout=10)
+                isi = isi_res.json()
+                
                 log.append("✅ PESAN DITERIMA DARI NETFLIX!")
-                log.append(f"📝 SUBJEK: {isi['subject']}")
-                teks = isi.get("text","") or isi.get("html","")
-                link = re.search(r'https?://[^\s<>"]+verification[^\s<>"]+|https?://www.netflix.com/[^\s<>"]+', teks)
-                if link: log.append(f"🔗 LINK VERIFIKASI: {link.group()}")
-                else: log.append("⚠️ LINK TIDAK KETEMU, CEK MANUAL!")
+                log.append(f"📝 SUBJEK: {isi.get('subject', 'Tidak ada subjek')}")
+                
+                teks = isi.get("text", "") or isi.get("html", "")
+                link = re.search(r'https?://[^\s<>"]+verification[^\s<>"]+|https?://www.netflix.com/[^\s<>"]+', str(teks))
+                if link:
+                    log.append(f"🔗 LINK VERIFIKASI: {link.group()}")
+                else:
+                    log.append("⚠️ LINK TIDAK KETEMU, SILAKAN CEK MANUAL!")
                 return "<br>".join(log)
+                
         log.append("⏰ PESAN TIDAK MASUK DALAM WAKTU TUNGGU!")
         return "<br>".join(log)
+        
     except Exception as e:
         log.append(f"❌ ERROR BACA EMAIL: {str(e)}")
+        log.append("💡 TAPI PENDAFTARAN TETAP TERKIRIM YA!")
         return "<br>".join(log)
 
 # ======================
 # 🚀 PROSES UTAMA
 # ======================
 def jalankan_proses(token_input):
-    log = ["🎁 PENDAFTARAN OTOMATIS NETFLIX", "="*50]
+    log = ["🎁 PENDAFTARAN TRIAL NETFLIX", "="*50]
     
     if not token_input.strip():
-        log.append("❌ SILAKAN TEMPEL TOKEN CAPTCHA DULU DI KOLOM ATAS!")
+        log.append("❌ SILAKAN TEMPEL TOKEN CAPTCHA DULU!")
         return "<br>".join(log)
     token = token_input.strip()
-    log.append("✅ TOKEN DITERIMA, MULAI PROSES!")
+    log.append("✅ TOKEN DITERIMA!")
 
-    # Buat email Mail.tm
+    # Buat email
     log.append("📧 MEMBUAT EMAIL TEMPORAL...")
     try:
-        dom = requests.get(f"{BASE_MAILTM}/domains?page=1", timeout=10).json()["hydra:member"][0]["domain"]
+        dom_res = requests.get(f"{BASE_MAILTM}/domains?page=1", timeout=10)
+        dom_data = dom_res.json()
+        daftar_dom = dom_data.get("hydra:member", [])
+        if not daftar_dom:
+            log.append("❌ TIDAK BISA AMBIL DOMAIN EMAIL!")
+            return "<br>".join(log)
+            
         nama = ''.join(random.choices(string.ascii_lowercase+string.digits,k=8))
-        email_baru = f"{nama}@{dom}"
+        email_baru = f"{nama}@{daftar_dom[0]['domain']}"
         sandi = "UjiCoba99!"
         requests.post(f"{BASE_MAILTM}/accounts", headers=headers_mailtm, json={"address":email_baru,"password":sandi}, timeout=15)
         log.append(f"✅ EMAIL: {email_baru}")
@@ -71,17 +104,18 @@ def jalankan_proses(token_input):
         log.append(f"❌ GAGAL BUAT EMAIL: {str(e)}")
         return "<br>".join(log)
 
-    # Kirim pendaftaran ke Netflix
-    log.append("🌐 MENGIRIM DATA KE NETFLIX...")
+    # Kirim ke Netflix
+    log.append("🌐 MENGIRIM KE NETFLIX...")
     try:
         payload = {"operationName":"CLCSScreenUpdate","variables":{"format":"HTML","imageFormat":"PNG","locale":"id-ID","serverState":"Bgjru+vcAxLTAU5En5gcaO7v7XjiK+rXFXxxInfs8S2xATg1JspUbo5FZiJWBmEvMVgdmR9SZ6ls/tnJzL2DiX1ZpEDzTPySXay5oWh+n159DQ0ZUzEH+DCPYegrj4HGBUH4jrx+k8r4V+RiwbCJri5hIJHBkm0U9DVbKQh6ngOFzJN+5ZyyV+Z0mlhhyhXawaHsrzyGLYsAO6VPXuyv9iRMihw6vAInnOOX5L/1NoByQC8aQQ7pZJ1JFMicXH3Zf1Vekx/pWvjGtP42MFXS+JARtzgeGtGdpeYCzJcYBiIOCgwDpEr8YdrJKDhAXJc=","serverScreenUpdate":"Bgjru+vcAxKSAn/xAw6MYX1AnpCWZuYykLwpMOkPstB/IWV1LG0TdgJeL6p3V/Rxc0H6Y1AjdGQnoq7pXXz/pvxZNUJBtnSnlEmbjxoi1Kzmx/XG7RjpVbm+CpCfToe6w6XPO3clBmha2mTEuPCtN2XUF1awZle4yJbeK1E1fZe80Zy8AClUxyXf2aR6sxF1YyiizlGzKwz78LudjMDcJwTXchHLkvQsAXelj9/Kvx8dk8d/m8zpx1A2gLeB+laz/WXEcsMvbvrEM8JbIN4+vreqiX2YQTWdORZNOWlKU3EnbkbHpZzClCqM3ij5Yr8PiCaSuR4wM82XYaw/7R1Z3ofu1oAKXIRRHCmdvvhdiy3w8/b+zCDCYOtsL7YYBiIOCgxMBpdIbc9NcH5VZOM=","inputFields":[{"name":"email","value":{"stringValue":email_baru}},{"name":"pipcConsent","value":{"booleanValue":False}},{"name":"emailConsent","value":{"booleanValue":False}},{"name":"recaptchaResponseTime","value":{"intValue":1096}},{"name":"recaptchaResponseToken","value":{"stringValue":token}}]},"extensions":{"persistedQuery":{"id":"0fd81de7-07af-4c7d-802f-0f4ea4181aa3","version":102}}}
         res = requests.post("https://web.prod.cloud.netflix.com/graphql", headers=headers_netflix, cookies=cookies, json=payload, timeout=15)
-        if "errors" in res.json():
-            log.append(f"⚠️ RESPON NETFLIX: {res.json()['errors'][0]['message']}")
+        res_data = res.json()
+        if "errors" in res_data:
+            log.append(f"⚠️ RESPON NETFLIX: {res_data['errors'][0]['message']}")
         else:
             log.append("✅ PENDAFTARAN BERHASIL DIKIRIM!")
     except Exception as e:
-        log.append(f"❌ ERROR KIRIM DATA: {str(e)}")
+        log.append(f"❌ ERROR KIRIM: {str(e)}")
         return "<br>".join(log)
 
     log.append("")
@@ -90,7 +124,7 @@ def jalankan_proses(token_input):
     return "<br>".join(log)
 
 # ======================
-# 🌐 HALAMAN UTAMA
+# 🌐 HALAMAN WEB
 # ======================
 @app.route('/', methods=['GET','POST'])
 def index():
