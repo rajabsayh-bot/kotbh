@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string
+from flask import Flask, render_template_string, request
 import requests
 import random
 import string
@@ -6,11 +6,9 @@ import string
 app = Flask(__name__)
 
 # ======================
-# 🍪 KONFIGURASI (ISI DI SINI)
+# 🍪 DATA TETAP SAMA
 # ======================
 cookie_str = """flwssn=c582c946-7e27-4cfc-a6f4-48597c0070bc;gsid=34197de4-f1e9-4d42-b254-2865906eaadc;SecureNetflixId=v%3D3%26mac%3DAQEAEQABABScAQhKHK_HuVx13xuvLPOZGaPEwMI39hU.%26dt%3D1783875815871;NetflixId=v%3D3%26ct%3DBgjHlOvcAxK8AQg10SjdRnmbKEnp_JwzTpYamPvvywqzDSxlVbfr7kEfypWwm-YnIOc5UKoMzSoX21d7H6Uv3gi99VO6YFb5yS8MELHcvWaOJ9b7Rgcz65RtCNlX3bVgtCGLl3aDae3Ol7Koi4xyli2Rt9OV9vgYoJ9-JHWXVvLLd9eiKX1t0-9zfo3Mvw_eP1EHlgO0bpMLyPKSDfKIo4eYN03OQPVjOA9OagAVRfudG6cbKKQPmCtnwhtdYrWIoajCsy0vGAYiDgoMqmTj8AHHlLk_smSQ;nfvdid=BQFmAAEBEAOpPCJrtFJLPu3EKNJPsT5glpLRsf9RvpeRRLKb5eyg0OguTiK2I3yonVDQtPZn77s2lTpJx4EFtQlDo52Gt7W0QdkqB0FINaROcR1E4W2ygtkUrA0hpb5CnRJWojAB_dbD8OPclxkUoHpETUwrBKDL;"""
-TOKEN_CAPTCHA = "ISI_TOKEN_RECAPTCHA_KAMU_DI_SINI"
-JUMLAH_AKUN = 1
 
 cookies = {}
 for c in cookie_str.split(';'):
@@ -27,17 +25,18 @@ headers_netflix = {
 }
 headers_mailtm = {"Content-Type": "application/json", "Accept": "application/json"}
 BASE_MAILTM = "https://api.mail.tm"
+JUMLAH_AKUN = 1
 
 # ======================
-# 🚀 PROSES UTAMA
+# 🚀 FUNGSI PROSES
 # ======================
-def jalankan_proses():
+def proses_pendaftaran(token_captcha):
     hasil = []
-    hasil.append("🎁 OTOMATIS: BUAT EMAIL + KIRIM LINK (VERCEL)")
+    hasil.append("🎁 OTOMATIS: BUAT EMAIL + KIRIM LINK")
     hasil.append("="*55)
 
-    if not TOKEN_CAPTCHA or "ISI_" in TOKEN_CAPTCHA:
-        hasil.append("❌ ISI DULU TOKEN CAPTCHA DI KODE!")
+    if not token_captcha.strip():
+        hasil.append("❌ MASUKKAN TOKEN CAPTCHA DULU!")
         return "<br>".join(hasil)
 
     for no in range(1, JUMLAH_AKUN+1):
@@ -45,7 +44,7 @@ def jalankan_proses():
         hasil.append("📧 MEMBUAT EMAIL TEMPORAL...")
 
         try:
-            res_domain = requests.get(f"{BASE_MAILTM}/domains?page=1", timeout=15)
+            res_domain = requests.get(f"{BASE_MAILTM}/domains?page=1", timeout=10)
             domain = res_domain.json()["hydra:member"][0]["domain"]
             nama = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
             email_baru = f"{nama}@{domain}"
@@ -55,12 +54,12 @@ def jalankan_proses():
                 f"{BASE_MAILTM}/accounts",
                 headers=headers_mailtm,
                 json={"address": email_baru, "password": sandi},
-                timeout=20
+                timeout=15
             )
             if res_buat.status_code in [200,201]:
                 hasil.append(f"✅ Email: {email_baru}")
             else:
-                hasil.append(f"❌ Gagal buat email!")
+                hasil.append(f"❌ Gagal buat email! Kode: {res_buat.status_code}")
                 continue
         except Exception as e:
             hasil.append(f"❌ Error Mail.tm: {str(e)}")
@@ -81,7 +80,7 @@ def jalankan_proses():
                         {"name": "pipcConsent", "value": {"booleanValue": False}},
                         {"name": "emailConsent", "value": {"booleanValue": False}},
                         {"name": "recaptchaResponseTime", "value": {"intValue": 1096}},
-                        {"name": "recaptchaResponseToken", "value": {"stringValue": TOKEN_CAPTCHA}}
+                        {"name": "recaptchaResponseToken", "value": {"stringValue": token_captcha}}
                     ]
                 },
                 "extensions": {
@@ -93,36 +92,65 @@ def jalankan_proses():
                 headers=headers_netflix,
                 cookies=cookies,
                 json=payload,
-                timeout=25
+                timeout=20
             )
             data = res_netflix.json()
             if "errors" not in data:
-                hasil.append(f"✅ LINK BERHASIL! {email_baru} | Sandi: {sandi}")
+                hasil.append(f"✅ LINK BERHASIL DIKIRIM!")
+                hasil.append(f"📩 Email: {email_baru}")
+                hasil.append(f"🔑 Sandi: {sandi}")
             else:
-                hasil.append(f"⚠️ Gagal: {data['errors'][0]['message']}")
+                hasil.append(f"⚠️ Gagal Netflix: {data['errors'][0]['message']}")
         except Exception as e:
-            hasil.append(f"❌ Error Netflix: {str(e)}")
+            hasil.append(f"❌ Error: {str(e)}")
 
     hasil.append("<br>"+"="*55)
     hasil.append("✅ SELESAI!")
     return "<br>".join(hasil)
 
 # ======================
-# 🌐 HALAMAN WEB
+# 🌐 HALAMAN DENGAN FORM
 # ======================
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    output = jalankan_proses()
+    hasil_proses = ""
+    if request.method == 'POST':
+        token = request.form.get('token_captcha', '')
+        hasil_proses = proses_pendaftaran(token)
+
     html = f"""
     <html>
-    <body style="background:#111;color:#0f0;font-family:monospace;padding:20px;max-width:900px;margin:auto;">
-        <h2>🎁 OTOMATIS PENDAFTARAN NETFLIX (VERCEL)</h2>
-        <pre style="white-space:pre-wrap;word-break:break-all;">{output}</pre>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pendaftaran Netflix Otomatis</title>
+        <style>
+            * {{box-sizing:border-box;margin:0;padding:0;}}
+            body {{background:#111;color:#0f0;font-family:monospace;padding:15px;max-width:500px;margin:auto;}}
+            h2 {{text-align:center;margin-bottom:20px;color:#ff0055;}}
+            .form {{background:#222;padding:15px;border-radius:8px;margin-bottom:20px;}}
+            label {{display:block;margin-bottom:8px;font-weight:bold;}}
+            input {{width:100%;padding:10px;margin-bottom:12px;border:1px solid #444;border-radius:4px;background:#333;color:#fff;font-size:14px;}}
+            button {{width:100%;padding:12px;background:#e50914;color:white;border:none;border-radius:4px;font-weight:bold;cursor:pointer;font-size:15px;}}
+            button:hover {{background:#ff2b44;}}
+            .hasil {{background:#000;padding:15px;border-radius:8px;white-space:pre-wrap;word-break:break-all;margin-top:20px;}}
+        </style>
+    </head>
+    <body>
+        <h2>🎁 PENDAFTARAN NETFLIX OTOMATIS</h2>
+        <div class="form">
+            <form method="POST">
+                <label>Masukkan Token reCAPTCHA:</label>
+                <input type="text" name="token_captcha" placeholder="Tempel token di sini..." required>
+                <button type="submit">🚀 MULAI PROSES</button>
+            </form>
+        </div>
+        {f'<div class="hasil">{hasil_proses}</div>' if hasil_proses else ''}
     </body>
     </html>
     """
     return render_template_string(html)
 
-# Wajib untuk Vercel
+# Wajib Vercel
 if __name__ != "__main__":
     application = app
