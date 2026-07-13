@@ -1,116 +1,96 @@
 from flask import Flask, render_template_string, request
 import requests
-import json
+import random
 
 app = Flask(__name__)
 
 # ======================
-# 🍪 COOKIE SESION LU
+# 🍪 KONFIGURASI
 # ======================
-cookie_str = """OTSessionTracking=87b6a5c0-0104-4e96-a291-092c11350111; flwssn=c582c946-7e27-4cfc-a6f4-48597c0070bc; gsid=caa4812a-9963-4def-9167-b601f191cfc5; netflix-sans-normal-3-loaded=true; netflix-sans-bold-3-loaded=true; nfvdid=BQFmAAEBEFECklCXwPof2v9oq0m-kSRgvhoBMFMGUDA7VDqWzhfh6d_0vpcH50lGalU_bxnBEk7nNy4QPSA0ConA19vDmIPnohyqr0WFLyg2fo0JhJEX0UUhy4k43S3wDJHceiqeKmXpBSFCFSBK5HyuCGBHr7-t; SecureNetflixId=v%3D3%26mac%3DAQEAEQABABTMKUJlBSG58EwKUNjiShKCe17fTYodiuw.%26dt%3D1783874192221; NetflixId=v%3D3%26ct%3DBgjHlOvcAxKZAzqyryoyc-LUwUPJGQ5fZsrSnWZKhhoZQ5QSbAVuvxOmjIbYLIPwphmVjqR52wXdNUeJLfj1di75k2kDQO_-SLbErGFnhksSd_px2DedqbL5wTY3x9_D06bcMvFvfAO9KVd2o82wXvZNWOab0m59UcBLLwLJR--c63hvWAojhmcs4U_Xi14hF3AgcShP_WPXZBefLbw3enLhO-InUu5lJRjEWPQbbb7DOYOpgOwnz-njq86uyYS7zSqFuw2N_cT4sMdmJ1_V23oAKg9AAg3bnBb7z9ieiel2YsAWGKfMSwgtRppBfZKc0TpNU6En_4NOwAvLfrXWX7E3GQg_43W7p3dxRTQhc1VfrPJrRV451iKt6u5lYoaq7qq4noI5sdwAr5amI-OBnQuw50YU2dKMVxOSnq6LsgMyGPHBMd4qU7yzwhfBAQQoiO_0jODWWtlQmQKE2skBkdL9GSpPm2cEj7Wx7pbxnnA878J3-cAPeShoY1uP86TLrSJZjGJcS-UdlVsPhQ3IxI3KSC0uJHFS5P-oesbCemi39m0YBiIOCgz-AG1K_HfI7lXWnsw.%26pg%3DE4UQOPLUERGP5H5TLQIITEVZ4I%26ch%3DAQEAEAABABT5WQX5qvSo_DRWohsHzrOAZR-NqaIaa78.; OptanonConsent=isGpcEnabled; netflix-mfa-nonce=BgjKu-vcAxKVAc0DUXYgDqIWVIzhYsnCKqapNSXdcVFK9cYXWP6nwuKKUEVHr8XYgaZqtljG2irj4VyLBbfEULpMUyUUccoCDGtb-HJUsjLXCqHU0YmP5kh7hBtXeNHmVOC_2lJoKiIwmsV_PK3EZLhj3NiTqa7InlZ4mgQ1-pyduR8jj2UDl3yEOqee7Z9P2B2-wl99zKnU-xyiv2n9GAYiDgoMssZccgelFQF52LGT; SecureNetflixId=v%3D3%26mac%3DAQEAEQABABQUf1AVs_qg5_qXuBMl5XBvTk8z3KiPLIU.%26dt%3D1783908403395; NetflixId=v%3D3%26ct%3DBgjHlOvcAxLEAa165jG28xojVluZFEqg5hdmfbmhvtFX3Ns-5X3myeqyycqLhWe5RCkaCPpem8Yoes_2CsJ8-rPhrWACl0Hc0oPQ4OdKMCRWKRo7BiQWoExmBNl0d7zB7e4oiEk6z7MHtMtYGKPZ0B2xvvdcMRe3U_Hkj0zxisOgKlhJUdawnEVjVDWHiN1J8ANN7NpLGmmamPBNQZJp23BrtWqfVIML3Zr4PM5Z1YDn5LthRdDcq1XSzlj9PY6iLWStftvPhnJeWVtC1kYYBiIOCgwvtoGR1vVu9TLWAdk.; OptanonConsent=isGpcEnabled=undefined&hosts=&datestamp=Mon+Jul+13+2026+09%3A42%3A03+GMT%2B0700+(Waktu+Indonesia+Barat)&version=202604.2.0"""
+PASSWORD_TETAP = "Akun77@@"
+cookie_str = """OTSessionTracking=87b6a5c0-0104-4e96-a291-092c11350111; flwssn=c582c946-7e27-4cfc-a6f4-48597c0070bc; gsid=caa4812a-9963-4def-9167-b601f191cfc5; SecureNetflixId=v%3D3%26mac%3DAQEAEQABABTMKUJlBSG58EwKUNjiShKCe17fTYodiuw.%26dt%3D1783874192221; NetflixId=v%3D3%26ct%3DBgjHlOvcAxKZAzqyryoyc-LUwUPJGQ5fZsrSnWZKhhoZQ5QSbAVuvxOmjIbYLIPwphmVjqR52wXdNUeJLfj1di75k2kDQO_-SLbErGFnhksSd_px2DedqbL5wTY3x9_D06bcMvFvfAO9KVd2o82wXvZNWOab0m59UcBLLwLJR--c63hvWAojhmcs4U_Xi14hF3AgcShP_WPXZBefLbw3enLhO-InUu5lJRjEWPQbbb7DOYOpgOwnz-njq86uyYS7zSqFuw2N_cT4sMdmJ1_V23oAKg9AAg3bnBb7z9ieiel2YsAWGKfMSwgtRppBfZKc0TpNU6En_4NOwAvLfrXWX7E3GQg_43W7p3dxRTQhc1VfrPJrRV451iKt6u5lYoaq7qq4noI5sdwAr5amI-OBnQuw50YU2dKMVxOSnq6LsgMyGPHBMd4qU7yzwhfBAQQoiO_0jODWWtlQmQKE2skBkdL9GSpPm2cEj7Wx7pbxnnA878J3-cAPeShoY1uP86TLrSJZjGJcS-UdlVsPhQ3IxI3KSC0uJHFS5P-oesbCemi39m0YBiIOCgz-AG1K_HfI7lXWnsw.%26pg%3DE4UQOPLUERGP5H5TLQIITEVZ4I%26ch%3DAQEAEAABABT5WQX5qvSo_DRWohsHzrOAZR-NqaIaa78.; OptanonConsent=isGpcEnabled"""
 
-# Proses cookie jadi dict
 cookies = {}
 for c in cookie_str.split(';'):
     if '=' in c:
         k, v = c.strip().split('=', 1)
         cookies[k] = v
 
-headers_netflix = {
+headers = {
     "Content-Type": "application/json",
-    "Origin": "https://www.netflix.com",
     "Referer": "https://www.netflix.com/id/",
     "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
 }
 
 # ======================
-# 📧 BUAT EMAIL BARU OTOMATIS (mail.tm)
+# 📧 BUAT EMAIL OTOMATIS
 # ======================
-def buat_email_baru():
+def buat_email():
     try:
-        # Ambil domain tersedia
         domain = requests.get("https://api.mail.tm/domains").json()["hydra:member"][0]["domain"]
-        # Buat akun baru
-        data = {
-            "address": f"netflix_{__import__('random').randint(10000,99999)}@{domain}",
-            "password": "Netfl!x12345"
-        }
-        res = requests.post("https://api.mail.tm/accounts", json=data)
-        if res.status_code == 201:
-            return data["address"], "✅ EMAIL BERHASIL DIBUAT!"
-        return None, "❌ Gagal buat email"
+        alamat = f"nf{random.randint(100000,999999)}@{domain}"
+        requests.post("https://api.mail.tm/accounts", json={"address": alamat, "password": PASSWORD_TETAP})
+        return alamat, "✅ Email berhasil dibuat"
     except Exception as e:
-        return None, f"❌ Error email: {str(e)}"
+        return None, f"❌ Gagal buat email: {str(e)}"
 
 # ======================
-# 🚀 KIRIM KE NETFLIX DENGAN TOKEN MANUAL
+# 🚀 KIRIM KE NETFLIX
 # ======================
-def kirim_ke_netflix(email_baru, token_manual):
+def kirim_netflix(email_baru, token_captcha):
     log = []
-    log.append(f"📧 EMAIL BARU: {email_baru}")
-    log.append("🌐 MENGIRIM KE NETFLIX...")
+    log.append(f"📧 Email: {email_baru}")
+    log.append(f"🔒 Sandi: {PASSWORD_TETAP}")
     
     try:
-        payload = {
-            "operationName": "CLCSScreenUpdate",
-            "variables": {
-                "format": "HTML",
-                "imageFormat": "PNG",
-                "locale": "id-ID",
-                "serverState": "Bgjru+vcAxLTAU5En5gcaO7v7XjiK+rXFXxxInfs8S2xATg1JspUbo5FZiJWBmEvMVgdmR9SZ6ls/tnJzL2DiX1ZpEDzTPySXay5oWh+n159DQ0ZUzEH+DCPYegrj4HGBUH4jrx+k8r4V+RiwbCJri5hIJHBkm0U9DVbKQh6ngOFzJN+5ZyyV+Z0mlhhyhXawaHsrzyGLYsAO6VPXuyv9iRMihw6vAInnOOX5L/1NoByQC8aQQ7pZJ1JFMicXH3Zf1Vekx/pWvjGtP42MFXS+JARtzgeGtGdpeYCzJcYBiIOCgwDpEr8YdrJKDhAXJc=",
-                "serverScreenUpdate": "Bgjru+vcAxKSAn/xAw6MYX1AnpCWZuYykLwpMOkPstB/IWV1LG0TdgJeL6p3V/Rxc0H6Y1AjdGQnoq7pXXz/pvxZNUJBtnSnlEmbjxoi1Kzmx/XG7RjpVbm+CpCfToe6w6XPO3clBmha2mTEuPCtN2XUF1awZle4yJbeK1E1fZe80Zy8AClUxyXf2aR6sxF1YyiizlGzKwz78LudjMDcJwTXchHLkvQsAXelj9/Kvx8dk8d/m8zpx1A2gLeB+laz/WXEcsMvbvrEM8JbIN4+vreqiX2YQTWdORZNOWlKU3EnbkbHpZzClCqM3ij5Yr8PiCaSuR4wM82XYaw/7R1Z3ofu1oAKXIRRHCmdvvhdiy3w8/b+zCDCYOtsL7YYBiIOCgxMBpdIbc9NcH5VZOM=",
-                "inputFields": [
-                    {"name": "email", "value": {"stringValue": email_baru}},
-                    {"name": "pipcConsent", "value": {"booleanValue": False}},
-                    {"name": "emailConsent", "value": {"booleanValue": False}},
-                    {"name": "recaptchaResponseTime", "value": {"intValue": 1200}},
-                    {"name": "recaptchaResponseToken", "value": {"stringValue": token_manual.strip()}}
-                ]
-            },
-            "extensions": {"persistedQuery": {"id": "0fd81de7-07af-4c7d-802f-0f4ea4181aa3", "version": 102}}
+        url_api = "https://www.netflix.com/signup/api/register"
+        data_kirim = {
+            "email": email_baru,
+            "password": PASSWORD_TETAP,
+            "recaptchaToken": token_captcha.strip(),
+            "country": "ID",
+            "locale": "id-ID",
+            "flow": "signup"
         }
         
-        res = requests.post(
-            "https://web.prod.cloud.netflix.com/graphql",
-            headers=headers_netflix,
-            cookies=cookies,
-            json=payload,
-            timeout=20
-        )
-        data = res.json()
+        res = requests.post(url_api, headers=headers, cookies=cookies, json=data_kirim, timeout=25)
+        log.append(f"📡 Respon: {res.status_code}")
         
-        if "errors" not in data:
-            log.append("✅ BERHASIL TERDAFTAR!")
-            log.append("📩 Cek inbox email di atas untuk lanjut verifikasi!")
+        if res.status_code == 200:
+            hasil = res.json()
+            if hasil.get("success") or "nextAction" in hasil:
+                log.append("✅ BERHASIL TERDAFTAR!")
+                log.append("📩 Cek inbox email untuk verifikasi!")
+            else:
+                log.append(f"⚠️ Info: {hasil.get('message','Coba token baru')}")
         else:
-            log.append(f"⚠️ Pesan Netflix: {data['errors'][0]['message']}")
+            log.append(f"❌ Gagal: {res.text[:200]}")
     
     except Exception as e:
-        log.append(f"❌ Error kirim: {str(e)}")
+        log.append(f"❌ Error: {str(e)}")
     
     return "<br>".join(log)
 
 # ======================
-# 🌐 HALAMAN UTAMA
+# 🌐 HALAMAN DENGAN ANIMASI LOADING
 # ======================
 @app.route('/', methods=['GET','POST'])
 def index():
     hasil = ""
-    token_input = ""
-    email_hasil = ""
+    email_tampil = ""
     
     if request.method == 'POST':
-        token_input = request.form.get('token_captcha','').strip()
-        if not token_input or len(token_input) < 50:
-            hasil = "⚠️ MASUKKAN TOKEN CAPTCHA YANG VALID!"
+        token = request.form.get('token_cap','').strip()
+        if not token or len(token) < 50:
+            hasil = "⚠️ Token tidak lengkap!"
         else:
-            email_baru, pesan = buat_email_baru()
+            email_baru, pesan = buat_email()
             hasil = pesan + "<br>"
             if email_baru:
-                email_hasil = email_baru
-                hasil += kirim_ke_netflix(email_baru, token_input)
+                email_tampil = email_baru
+                hasil += kirim_netflix(email_baru, token)
     
-    html = f"""
+    return render_template_string(f"""
     <html>
     <head>
         <meta charset="UTF-8">
@@ -118,32 +98,147 @@ def index():
         <title>Buat Akun Netflix Trial</title>
         <style>
             *{{box-sizing:border-box;margin:0;padding:0;}}
-            body{{background:#111;color:#fff;font-family:monospace;padding:20px;max-width:500px;margin:auto;}}
-            h2{{text-align:center;color:#e50914;margin-bottom:15px;}}
-            .box{{background:#222;padding:15px;border-radius:10px;margin-bottom:10px;}}
-            input,textarea{{width:100%;padding:10px;margin:5px 0;border:none;border-radius:6px;font-size:14px;}}
-            textarea{{min-height:100px;resize:vertical;}}
-            button{{width:100%;padding:12px;background:#e50914;color:#fff;border:none;border-radius:6px;font-weight:bold;font-size:16px;cursor:pointer;margin-top:5px;}}
-            .log{{background:#000;padding:15px;border-radius:8px;margin-top:15px;color:#0f0;word-break:break-all;}}
-            .email{{background:#2a2a2a;padding:10px;border-radius:6px;margin:10px 0;color:#ffb700;font-weight:bold;}}
+            body{{
+                background:linear-gradient(135deg,#1a1a1a,#000);
+                color:#fff;
+                font-family:'Segoe UI',monospace;
+                padding:20px;
+                max-width:500px;
+                margin:auto;
+                min-height:100vh;
+            }}
+            h2{{
+                color:#e50914;
+                text-align:center;
+                margin-bottom:20px;
+                text-shadow:0 0 10px #e5091480;
+            }}
+            .kotak{{
+                background:#2229;
+                padding:20px;
+                border-radius:15px;
+                border:1px solid #ffb70040;
+                backdrop-filter:blur(10px);
+                box-shadow:0 0 20px #0008;
+            }}
+            textarea{{
+                width:100%;
+                min-height:120px;
+                padding:12px;
+                border-radius:8px;
+                border:1px solid #444;
+                background:#111;
+                color:#0f0;
+                font-size:13px;
+                margin:10px 0;
+                resize:vertical;
+            }}
+            button{{
+                width:100%;
+                padding:14px;
+                background:linear-gradient(90deg,#e50914,#ff3333);
+                color:#fff;
+                border:none;
+                border-radius:8px;
+                font-weight:bold;
+                font-size:16px;
+                cursor:pointer;
+                transition:all 0.3s;
+                box-shadow:0 4px 15px #e5091460;
+            }}
+            button:hover{{transform:translateY(-2px);box-shadow:0 6px 20px #e5091480;}}
+            button:disabled{{background:#555;cursor:not-allowed;transform:none;}}
+
+            /* ANIMASI LOADING KEREN */
+            .loading{{
+                display:none;
+                flex-direction:column;
+                align-items:center;
+                gap:15px;
+                margin:20px 0;
+                padding:20px;
+                background:#1119;
+                border-radius:10px;
+                border:1px dashed #ffb700;
+            }}
+            .aktif{{display:flex;}}
+            .spinner{{
+                width:50px;
+                height:50px;
+                border:4px solid #333;
+                border-top:4px solid #e50914;
+                border-right:4px solid #ffb700;
+                border-radius:50%;
+                animation:putar 0.8s linear infinite;
+            }}
+            @keyframes putar{{100%{{transform:rotate(360deg);}}}}
+            .teks-loading{{
+                color:#ffb700;
+                font-weight:bold;
+                animation:kedip 1s infinite;
+            }}
+            @keyframes kedip{{0%,100%{{opacity:1;}}50%{{opacity:0.4;}}}}
+
+            .info{{
+                background:#2a2a2a;
+                padding:12px;
+                border-radius:8px;
+                margin:15px 0;
+                color:#ffb700;
+                border-left:4px solid #ffb700;
+            }}
+            .log{{
+                margin-top:15px;
+                padding:12px;
+                background:#000;
+                border-radius:8px;
+                color:#0f0;
+                word-break:break-all;
+                border:1px solid #333;
+            }}
         </style>
     </head>
     <body>
         <h2>🎁 BUAT AKUN TRIAL NETFLIX</h2>
-        <div class="box">
-            <form method="POST">
-                <label>🔑 TEMPEL TOKEN CAPTCHA DI BAWAH:</label>
-                <textarea name="token_captcha" placeholder="Ambil token dari skrip Tampermonkey lu, lalu tempel di sini..." required>{token_input}</textarea>
-                <button type="submit">🚀 BUAT & DAFTARKAN</button>
+        <div class="kotak">
+            <form method="POST" id="formUtama">
+                <label>🔑 Tempel Token CAPTCHA:</label>
+                <textarea name="token_cap" placeholder="Ambil token dari skrip Tampermonkey, tempel di sini..." required></textarea>
+                
+                <div class="info">
+                    ⚙️ Pengaturan Otomatis:<br>
+                    • Sandi Akun: <b>{PASSWORD_TETAP}</b><br>
+                    • Email: Dibuat otomatis
+                </div>
+
+                <button type="submit" id="btnKirim">🚀 MULAI PEMBUATAN AKUN</button>
             </form>
+
+            <!-- ANIMASI LOADING -->
+            <div class="loading" id="animasiLoad">
+                <div class="spinner"></div>
+                <div class="teks-loading">⏳ SEDANG MEMBUAT EMAIL...</div>
+                <div class="teks-loading">⏳ MENGIRIM DATA KE NETFLIX...</div>
+            </div>
+
+            {f'<div class="info">📧 EMAIL BARU: {email_tampil}</div>' if email_tampil else ''}
+            <div class="log">{hasil or "Siap untuk membuat akun baru!"}</div>
         </div>
-        {f'<div class="email">📧 EMAIL DIBUAT: {email_hasil}</div>' if email_hasil else ''}
-        <div class="log">{hasil or "Masukkan token reCAPTCHA lu lalu klik tombol di atas"}</div>
+
+        <script>
+            // AKTIFKAN ANIMASI SAAT TOMBOL DIKLIK
+            const form = document.getElementById('formUtama');
+            const btn = document.getElementById('btnKirim');
+            const load = document.getElementById('animasiLoad');
+
+            form.addEventListener('submit', ()=>{{
+                btn.disabled = true;
+                btn.textContent = "⏳ MEMPROSES...";
+                load.classList.add('aktif');
+            }});
+        </script>
     </body>
     </html>
-    """
-    return render_template_string(html)
+    """)
 
-# WAJIB UNTUK VERCEL
-if __name__ != "__main__":
-    application = app
+application = app
